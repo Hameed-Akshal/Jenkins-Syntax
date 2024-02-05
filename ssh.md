@@ -7,6 +7,10 @@ sudo systemctl start httpd.service
 sudo systemctl status httpd.service
 sudo systemctl enable httpd.service
 ```
+### Check The configuration syntax
+```
+sudo apachectl configtest
+```
 ### Update Server 80 and Add the Domain name in /etc/httpd/conf.httpd.conf
 ```
 <VirtualHost *:80>
