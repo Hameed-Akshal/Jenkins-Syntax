@@ -18,7 +18,7 @@ location / {
         }
 ```
 
-### Restart the Nginx
+### Check The Configuration Syntax & Restart The Nginx
 ```
   nginx -t && nginx -s reload
 ```
