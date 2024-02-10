@@ -1,127 +1,128 @@
 def img
 pipeline {
     environment {
-        AWS_ACCOUNT_ID="account id"
-        AWS_DEFAULT_REGION="us-east-1" 
-        IMAGE_REPO_NAME="demo"
-        REGISTRY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
-        REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+        registry = "Repo Name"
+        docker_CREDENTIALS= 'Access of Docker'
+        registryUrl = 'Docker Repo URL'
+        repoReg = 'Registry Name'
+        dockerImage = ''
+        dusername = 'docker username '
+        dpassword = 'docker password'
+        
+        
+      
     }
     agent any
     
     stages{
 
 
-         stage('build checkout gitlab'){
+         stage('build checkout git'){
             steps{
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'git-cred',url: 'https://gitlab.com/hameed/beta-demo-cicd']])
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'Git cred in jenkins',url: 'Git Repo Url']])
             }
         }
   
-        stage('build docker image'){
+        stage('build image'){
             steps{
                 script{
-                     sh"docker build -t ${REPOSITORY_URI} ."
-                     sh"docker tag ${REPOSITORY_URI} ${REPOSITORY_URI}:latest"
-                     sh"docker tag ${REPOSITORY_URI} ${REPOSITORY_URI}:${env.BUILD_ID}"
+                     img = registry + ":${env.BUILD_ID}"
+                     println ("${img}")
+                     dockerImage = docker.build img
             }
           }
         }
-        stage('Login and Push images to ECR'){
+        
+        stage('Login and Push image to ACR'){
 	       steps{
 		       script{
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Aws-Cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                    def ecrAuth = sh(script: "aws ecr get-login-password --region ${AWS_DEFAULT_REGION}", returnStdout: true).trim()
-                    sh("docker login -u AWS -p ${ecrAuth} ${REGISTRY_URI}")
-
-                    // Push the Docker image to AWS ECR
-                    sh("docker push ${REPOSITORY_URI}:${env.BUILD_ID}")
-                    sh("docker push ${REPOSITORY_URI}:latest")
-                
-                }
+		         docker.withRegistry(registryUrl,ACR_CREDENTIALS) {
+             dockerImage.push()
+              }
             
 	    	  }
-	        }
-          }
-           
-        
+	      }
+	    }
 
-        stage('SSH to Beta'){
+        stage('SSH'){
             steps{
                 script{
-                    sshPublisher(
-                        publishers: [
-                            sshPublisherDesc(
-                                configName: "demoec2",#name on publish over ssh
-                                verbose: true,
-                                transfers: [
-                                    // sshTransfer(
-                                    //     execCommand: 'pwd',
-                                    //     execTimeout: 120000,                           
-                                    // ),
-
-                                    // sshTransfer(
-                                    //     execCommand: 'ls -l',
-                                    //     execTimeout: 120000,    
-                                    // ),
-                                    sshTransfer(
-                                        execCommand: "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REGISTRY_URI",
-                                        execTimeout: 180000,                          
-                                    ),
-                                    sshTransfer(
-                                        execCommand: 'docker ps',
-                                        execTimeout: 120000,                          
-                                    ),
-                                    sshTransfer(
-                                        execCommand: 'docker images',
-                                        execTimeout: 120000,
-                                    ),
-                                    sshTransfer(
-                                        execCommand: "docker stop demo",
-                                        execTimeout: 120000,
-                                    ),
-                                    sshTransfer(
-                                        execCommand: "docker rm demo",
-                                        execTimeout: 180000,
-                                    ),
-                                    sshTransfer(
-                                        execCommand: 'docker rmi -f $(docker images -q)',
-                                        execTimeout: 180000,    
-                                    ),
-                                    sshTransfer(
-                                        execCommand: 'docker ps',
-                                        execTimeout: 120000,
-                                    ),
-                                    sshTransfer(
-                                        execCommand: "docker pull ${REPOSITORY_URI}:${env.BUILD_ID}",
-                                        execTimeout: 120000,                                       
-                                    ),
-                                    sshTransfer(
-                                        execCommand: "docker run -d -p 3000:80 --name=demo ${REPOSITORY_URI}:${env.BUILD_ID}",
-                                        execTimeout: 120000,
-                                    ),
-                                    sshTransfer(
-                                        execCommand: 'docker ps',
-                                        execTimeout: 120000,
-                                    ),
-                                    sshTransfer(
-                                        execCommand: 'docker images',
-                                        execTimeout: 120000,
-                                    )
-                                    ],
-                                    usePromotionTimestamp: false, 
-                                    useWorkspaceInPromotion: false, 
+                  
+                     sshPublisher(
+                      publishers: [
+                       sshPublisherDesc(
+                         configName: 'SSH server name on manage Jenkins',
+                         verbose: true,
+                         transfers: [
+                           sshTransfer(
+                            execCommand: 'pwd',
+                            execTimeout: 120000,
+                            
+                          ),
+                          sshTransfer(
+                            execCommand: 'ls -l',
+                            execTimeout: 120000,
+                            
+                          ),
+                          sshTransfer(
+                            execCommand: 'docker stop test',
+                            execTimeout: 180000,
+                            
+                          ),
+                          sshTransfer(
+                            execCommand: 'docker ps',
+                            execTimeout: 120000,
+                            
+                          ),
+                          sshTransfer(
+                            execCommand: 'docker rm test',
+                            execTimeout: 180000,
+                            
+                          ),
+                          sshTransfer(
+                            execCommand: 'ls',
+                            execTimeout: 180000,
+                            
+                          ),
+                          sshTransfer(
+                            execCommand: 'docker images',
+                            execTimeout: 120000,
+                            
+                          ),
+                          sshTransfer(
+                            execCommand: 'docker ps',
+                            execTimeout: 120000,
+                            
+                          ),
+                          sshTransfer(
+                            execCommand: "cat ~/ACR_password.txt | docker login $repoReg --username $dusername  --password-stdin",
+                            execTimeout: 120000,
+                        
+                          ),
+                          sshTransfer(
+                            execCommand: "docker pull $repoReg/$registry:${env.BUILD_ID}",
+                            execTimeout: 120000, 
+                            
+                          ),
+                          sshTransfer(
+                            execCommand: "docker run -d -p 80:80 --name=test $repoReg/$registry:${env.BUILD_ID}",
+                            execTimeout: 120000,
+                            
+                          )
+                         ],
+                         usePromotionTimestamp: false, 
+                         useWorkspaceInPromotion: false, 
                          
 
                         )
-                      ]
-                    )
+                     ]
+                  )
  
                 }
             }
         }
         
-        stage('Clean resources'){
+        stage('Clean resource'){
             steps{
                 script{
                       sh "docker images"
@@ -131,7 +132,8 @@ pipeline {
                       sh "docker ps"
                 }
             }
-        }    
+        }
+
+
     }
- }
-    
+}
