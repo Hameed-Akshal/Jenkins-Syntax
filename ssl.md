@@ -1,4 +1,20 @@
-### Install the Apache
+## Install The Docker
+```
+sudo yum install docker -y
+```
+## Starting The Docker
+```
+sudo systemctl start docker
+```
+## Enabling The Docker
+```
+sudo systemctl enable docker
+```
+## Add The Current User To the Docker Group
+```
+sudo usermod -a -G docker $(whoami)
+```
+## Install the Apache
 ```
 sudo dnf update -y
 sudo dnf list | grep httpd
@@ -7,7 +23,7 @@ sudo systemctl start httpd.service
 sudo systemctl status httpd.service
 sudo systemctl enable httpd.service
 ```
-### Update Server 80 and Add the Domain name in /etc/httpd/conf.httpd.conf
+## Update Server 80 and Add the Domain name in /etc/httpd/conf.httpd.conf
 ```
 <VirtualHost *:80>
     ServerName beta.demo.com
@@ -29,17 +45,15 @@ RewriteRule $ https://beta.nyinst.com/ [R=301,L]
     ServerName 192.46.20.188
     Redirect permanent / https://beta.demo.com/
 </VirtualHost>
-
-
 ```
 
-###  Install the CertBot
+##  Install the CertBot
 ```
 sudo yum install certbot
 sudo yum install python-certbot-apache
 ```
 
-### Create SSl Certificate
+## Create SSl Certificate
 ```
 sudo certbot --apache -d example.com -d www.example.com
 ```
