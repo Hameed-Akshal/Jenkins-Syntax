@@ -15,20 +15,22 @@ sudo systemctl enable httpd.service
     <Location />
         ProxyPass http://localhost:3000/
         ProxyPassReverse http://localhost:3000/
-        #AllowEncodedSlashes NoDecode
 
         ProxyPreserveHost On
-        #ProxyVia Full
         ProxyAddHeaders On
 
         RequestHeader set X-Forwarded-Proto "http"
     </Location>
 RewriteEngine on
-RewriteCond %{HTTP_HOST} ^52\.66\.200\.188$ [NC]
 RewriteCond %{SERVER_NAME} =beta.nyinst.com
 RewriteRule $ https://beta.nyinst.com/ [R=301,L]
-Redirect permanent / https://beta.nyinst.com/
 </VirtualHost>
+<VirtualHost *:80>
+    ServerName 192.46.20.188
+    Redirect permanent / https://beta.demo.com/
+</VirtualHost>
+
+
 ```
 
 ###  Install the CertBot
