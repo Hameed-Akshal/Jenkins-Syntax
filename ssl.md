@@ -22,10 +22,10 @@ sudo systemctl start nginx.service
 sudo systemctl status nginx.service
 ```
 
-## Comment the Root Location , below code under server 80 and add the domain name 
+## Comment the Root Location, below code under server 80, and add the domain name 
 ```
 location / {
-        proxy_pass http://localhost:8080;  # Change the port if your jenkins  is running on a dif
+        proxy_pass http://localhost:8080;  # Change the port if your Jenkins  is running on a different port
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -54,6 +54,7 @@ sudo certbot --nginx -d example.com -d www.example.com
 ```
 crontab -e
 ```
+### Here the crontab will executed every month 1st at noon to renew the certificate 
 ```
-0 12 * * * /usr/bin/certbot renew --quiet
+0 12 1 * * /usr/bin/certbot renew --quiet
 ```
