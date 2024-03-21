@@ -65,3 +65,8 @@ crontab -e
 ```
 0 12 * * * /usr/bin/certbot renew --quiet
 ```
+
+### Uninstall Apache
+```
+sudo yum erase httpd httpd-tools apr apr-util
+```
